@@ -10,81 +10,71 @@ import UIKit
 class GameViewController: UIViewController {
     
     
-    
-    var targetLetter = ""
-    var randomLetters = [String]()
-    var score = 0
-    let letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
-    
-    
-    @IBOutlet weak var theScoreLabel: UILabel!
-    @IBOutlet weak var titleLetter: UILabel!
-    
+    @IBOutlet weak var targetLetterLabel: UILabel!
+    @IBOutlet weak var scoreLabel: UILabel!
+    @IBOutlet weak var secondsLabel: UILabel!
     @IBOutlet var letterButtons: [UIButton]!
     
+    
+    var timer: Timer!
+    let gameBrain = GameBrain.shared
+    
+    
     @IBAction func letterButtonTapped(_ sender: UIButton) {
-        calculateNewScore(selectedLetter: sender.currentTitle!)
-        updateScoreLabel()
-        newRound()
+        //        7.1 Within `letterButtonTapped`, use the game brain to process the selected letter and call `updateUI`.
+        gameBrain.letterSelected(selectedLetter: sender.currentTitle!)
+        updateUI()
     }
+    
+    
+    func updateUI() {
+        targetLetterLabel.text = gameBrain.targetLetter
+        
+        scoreLabel.text = String(gameBrain.score)
+        
+        secondsLabel.text = String(gameBrain.secondsRemaining)
+        
+        for index in 0..<letterButtons.count{
+            
+            let button = letterButtons[index]
+            let letter = gameBrain.randomLetters[index]
+            
+            button.setTitle(letter, for: .normal)
+        }
+    }
+    
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        newRound()
-    }
-    
-    func newRound() {
-        targetLetter = letters.randomElement()!
+        gameBrain.newGame(numLetters: 12)
+        updateUI()
+        configureTimer()
         
-       randomLetters = generateRandomLetters(numLetters: 12)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
         
-        updateTargetLetterLabel()
-        updateLetterButtons()
+        timer.invalidate()
     }
     
-    func generateRandomLetters(numLetters: Int) -> [String] {
-        // it needs to include the target letter
-        // The order should be random
-        // needs to have 12 letters
+    func configureTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true, block: fireTimer(timer:))
+        RunLoop.current.add(timer, forMode: .common)
+    }
+    
+    func fireTimer(timer: Timer) {
+        gameBrain.secondsRemaining -= 1
+        updateUI()
         
-        var myArray: [String] = [targetLetter]
+        if gameBrain.secondsRemaining <= 0 {
+            timer.invalidate()
+            self.dismiss(animated: true, completion: nil)
         
-        while myArray.count < numLetters {
-            //get random letter
-            let randomLetter = letters.randomElement()!
-            //if letter not in myArray
-            if !myArray.contains(randomLetter){
-                myArray.append(randomLetter)
-            }
-        }
-        myArray.shuffle()
-
-        return myArray
-    }
-    
-    func calculateNewScore(selectedLetter: String) {
-
-        if selectedLetter == targetLetter{
-            score += 1
-        }
-    }
-    
-    func updateTargetLetterLabel() {
-        titleLetter.text = targetLetter
-    }
-    
-    func updateScoreLabel() {
-        theScoreLabel.text = String(score)
-    }
-    
-    func updateLetterButtons() {
-        for index in 0..<letterButtons.count{
-            let button = letterButtons[index]
-            let letter = randomLetters[index]
-            
-            button.setTitle(letter, for: .normal)
+           
         }
         
     }
+    
 }
