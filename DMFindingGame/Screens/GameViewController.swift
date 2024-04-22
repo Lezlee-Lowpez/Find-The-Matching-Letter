@@ -70,7 +70,8 @@ class GameViewController: UIViewController {
         
         if gameBrain.secondsRemaining <= 0 {
             timer.invalidate()
-            self.dismiss(animated: true, completion: nil)
+            CoreDataManager.shared.addScore(score: gameBrain.score)
+            navigationController?.popViewController(animated: true)
         
            
         }
